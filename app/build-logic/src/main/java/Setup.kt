@@ -47,7 +47,7 @@ fun Project.setupCommon() {
                 minorApiLevel = 1
             }
         }
-        buildToolsVersion = "37.0.0"
+        buildToolsVersion = "36.1.0"
         ndkPath = "${androidComponents.sdkComponents.sdkDirectory.get().asFile}/ndk/magisk"
         ndkVersion = "30.0.15729638"
 
@@ -101,15 +101,11 @@ private fun Project.downloadFile(url: String, checksum: String): File {
     return file
 }
 
-const val BUSYBOX_DOWNLOAD_URL =
-    "https://github.com/topjohnwu/magisk-files/releases/download/files/busybox-1.36.1.1.zip"
-const val BUSYBOX_ZIP_CHECKSUM =
-    "b4d0551feabaf314e53c79316c980e8f66432e9fb91a69dbbf10a93564b40951"
 
-const val BOOTCTL_DOWNLOAD_URL =
-    "https://github.com/topjohnwu/magisk-files/releases/download/files/bootctl-android-14.0.0_r1.zip"
-const val BOOTCTL_ZIP_CHECKSUM =
-    "2cf515aeb17259e88393a1322671ebab1968925864bc04ae57dad54e53ccf15b"
+//const val BOOTCTL_DOWNLOAD_URL =
+//    "https://github.com/topjohnwu/magisk-files/releases/download/files/bootctl-android-14.0.0_r1.zip"
+//const val BOOTCTL_ZIP_CHECKSUM =
+//    "2cf515aeb17259e88393a1322671ebab1968925864bc04ae57dad54e53ccf15b"
 
 private abstract class SyncWithDir : Sync() {
     @get:OutputDirectory
@@ -138,15 +134,9 @@ fun Project.setupCoreLib() {
                         }
                     }
                 }
-                from(zipTree(downloadFile(BUSYBOX_DOWNLOAD_URL, BUSYBOX_ZIP_CHECKSUM)))
+
+                from(rootFile("tools/busybox"))
                 include(abiList.map { "$it/libbusybox.so" })
-                from(zipTree(downloadFile(BOOTCTL_DOWNLOAD_URL, BOOTCTL_ZIP_CHECKSUM)))
-                include(abiList.map { "$it/libbootctl.so" })
-                onlyIf {
-                    if (inputs.sourceFiles.files.size != abiList.size * 7)
-                        throw StopExecutionException("Please build binaries first! (./build.py binary)")
-                    true
-                }
             }
             variant.sources.jniLibs
                 ?.addGeneratedSourceDirectory(syncLibs, SyncWithDir::outputFolder)
@@ -178,6 +168,7 @@ fun Project.setupCoreLib() {
                     include("util_functions.sh", "boot_patch.sh", "addon.d.sh",
                         "app_functions.sh", "uninstaller.sh", "module_installer.sh")
                 }
+                from(rootFile("tools/bootctl"))
                 from(stubTask) {
                     include { it.name.endsWith(".apk") }
                     rename { "stub.apk" }
